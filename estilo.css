@@ -1,0 +1,75 @@
+			BUTTON {
+				background-color: var(--fndbt);
+				color: white;
+				margin: 4px;
+				}
+			BUTTON.disabled{
+				cursor: not-allowed;
+				pointer-events: none;
+
+				/*Button disabled - CSS color class*/
+				color: #c0c0c0;
+				background-color: #ffffff;
+
+				}
+			BUTTON.acoes {margin:0px; font-size: 10px;background-color: var(--btitens)}
+			BUTTON.del {margin:0px; font-size: 10px;font-weight: bold;background-color: lightgrey ;color:var(--btitens);}
+			BUTTON.edt {margin:0px; font-size: 10px;background-color: var(--btitens)}
+			DIV#frm {
+				border: solid 1px var(--claro);
+				border-radius: 12px;
+				color: var(--lara);
+				font-family: var(--ftpad);
+				padding: 10px;
+				position: fixed;
+				top: 230px;
+				left: 760px;
+				}
+			DIV#pedido { 
+				border: solid 1px var(--claro);
+				color: var(--lara);
+				border-radius: 12px;
+				left: 50px;
+				position: relative;
+				width:600px;  
+				}
+			H1 {font-family: var(--ftpad);}
+			INPUT {
+				border-color: var(--claro);
+				border-radius: 8px;
+				}
+			LABEL {
+				color: var(--lara);
+				font-family: var(--ftpad);
+				font-weight: bold;
+				}
+			UL#main LI {
+				display: table-row;
+				float: clear;
+				}
+			UL#main LI UL LI {
+				background-color:  var(--corfnditem);
+				border: solid 1px var(--brdli);
+				color: var(--coritem);
+				display: table-cell; 
+				float: left;
+				font-family: var(--helv);
+				height: 30px;
+				list-style-type: none; 
+				padding: 4px;
+				}
+			UL#main LI UL LI.tit {
+				background-color:  var(--corfnditemtit);
+				color: var(--coritemtit);				
+				}
+			UL#main LI UL LI.inverso {
+				color:  var(--corfnditem);
+				background-color: var(--coritem);
+				}
+			UL#main > LI  > UL > li:nth-child(1) { width:  50px;  text-align: right;}
+			UL#main > LI  > UL > li:nth-child(2) { width:  70px;  text-align: right;}
+			UL#main > LI  > UL > li:nth-child(3) { width: 300px; font-size: 12px;}
+			UL#main > LI  > UL > li:nth-child(4) { width:  85px; text-align: right; }
+			UL#main > LI  > UL > li:nth-child(5) { width:  70px;  text-align: left;}
+			UL#it000 {font-weight: bold;background-color: var(--tititens);}
+			UL#it000 LI {background-color: var(--corfnditemtit); color: var(--coritemtit);}

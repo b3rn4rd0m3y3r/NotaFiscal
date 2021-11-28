@@ -1,0 +1,52 @@
+<html>
+<head>
+		<title>jq003</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq004.html?NoItens=9 -->
+		<style>
+			BUTTON {
+				margin: 4px;
+				}
+			LI {  
+				
+				display: table-cell;
+				float: left;
+				list-style-type: none; 
+				}
+			UL {
+				display: table-row;
+				}
+			UL LI UL LI {border: solid 1px steelblue; padding: 4px;}
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				o = $("UL#main");
+				o.append("<li id=\"it000\"></li>");
+				var o1 = $("LI#it000");
+				o1.append("<ul id=\"it000\"></ul>");
+				var o2 = $("UL#it000");
+				o2.append("<li>"+sNoItens+"</li>");
+				o2.append("<li>No Item</li>");
+				o2.append("<li>Tipo Item</li>");
+				o2.append("<li>Quantidade</li>");
+				console.log(o);
+				}
+		</script>
+</head>
+<body onload="init();">
+	<button>Adiciona Item</button>
+	<ul id="main">
+	</ul>
+</body>
+</html>
+

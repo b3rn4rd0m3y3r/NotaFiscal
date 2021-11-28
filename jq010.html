@@ -1,0 +1,136 @@
+<html>
+<head>
+		<title>jq009</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq007.html?NoItens=9 -->
+		<style>
+			:root {
+				--ftpad: Verdana;
+				--helv: Helvetica;
+				--lara: #00A0A0;
+				--claro: #008040;
+				}
+			BUTTON {
+				background-color: darkgreen;
+				color: white;
+				margin: 4px;
+				}
+			DIV#frm {
+				border: solid 1px gray;
+				border-radius: 12px;
+				color: teal;
+				font-family: var(--ftpad);
+				padding: 10px;
+				position: fixed;
+				top: 70px;
+				left: 800px;
+				}
+			INPUT {
+				border-color: var(--claro);
+				border-radius: 8px;
+				}
+			LABEL {
+				color: var(--lara);
+				font-weight: bold;
+				}
+			UL#main LI {
+				display: table-row;
+				float: clear;
+				}
+			UL LI UL LI {
+				float: left;
+				list-style-type: none; 
+				border: solid 1px steelblue; padding: 4px;
+				display: table-cell;
+				font-family: var(--helv);
+				}
+			UL#main > LI  > UL > li:nth-child(1) { width:  40px;  text-align: right;}
+			UL#main > LI  > UL > li:nth-child(2) { width:  70px;  text-align: right;}
+			UL#main > LI  > UL > li:nth-child(3) { width: 300px; }
+			UL#main > LI  > UL > li:nth-child(4) { width:  85px; text-align: right; }
+			UL#it000 {font-weight: bold;background-color: lightblue;}
+			UL#it000 LI {background-color: lightblue;}
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			// Inicialização: coloca os cabeçalhos de coluna
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				addItem(0,sNoItens, "No Item","Tipo do Item", "Quantidade");
+				}
+			// Lista os filhos dos nós dos itens
+			function listNos(noNos){
+				var sNoItens = null;
+				var id = null;
+				var filhos = null;
+				for(i=1;i<noNos;i++){
+					sNoItens = ("000"+i.toString()).substr(-3);
+					id = "it"+sNoItens;
+					filhos = $("UL#"+id)[0].children;
+					console.log(filhos);
+					}
+				}
+			// Adiciona item baseado no form DIV
+			function addReg(){
+				addItem(0,"", "","", "");
+				}
+			// Adiciona um item (coluna de cabeçalho ou registro)
+			function addItem(num, a1, a2, a3, a4){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
+					alert("Preencha o Número do Item, o Tipo e a Quantidade");
+					} else {
+					o.append("<li id=\"it"+sNoItens+"\"></li>");
+					var o1 = $("LI#it"+sNoItens);
+					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+					var o2 = $("UL#it"+sNoItens);
+					o2.append("<li>"+(num+noIt)+"</li>");
+					// Testa se é título
+					if( noIt == 0 ){
+						o2.append("<li>"+a2+"</li>");
+						o2.append("<li>"+a3+"</li>");
+						o2.append("<li>"+a4+"</li>");
+						} else {
+						o2.append("<li>"+$("#fmItem").val()+"</li>");
+						o2.append("<li>"+$("#fmTpItem").val()+"</li>");
+						o2.append("<li>"+$("#fmQtd").val()+"</li>");
+						}
+					noIt++;
+					}
+				}
+		</script>
+</head>
+<body onload="init();">
+	
+	<ul id="main">
+	</ul>
+	<div id="frm">
+		<h1>Entrada de Itens</h1>
+		<table>
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><input id="fmTpItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number"></td>
+			</tr>
+		</table>
+		<center>
+			<button onclick="addReg()">Adiciona Item</button>
+			<button onclick="listNos(noIt)">Grava</button>
+		</center>
+	</div>
+</body>
+</html>
+

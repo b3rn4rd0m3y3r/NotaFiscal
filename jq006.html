@@ -1,0 +1,97 @@
+<html>
+<head>
+		<title>jq006</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq004.html?NoItens=9 -->
+		<style>
+			:root {
+				--ftpad: Verdana;
+				--helv: Helvetica;
+				--lara: #00A0A0;
+				--claro: #008040;
+				}
+			BUTTON {
+				margin: 4px;
+				}
+			DIV#frm {
+				border: solid 1px gray;
+				color: teal;
+				font-family: var(--ftpad);
+				padding: 10px;
+				position: fixed;
+				top: 70px;
+				left: 800px;
+				}
+			INPUT {
+				border-color: var(--claro);
+				}
+			LABEL {
+				color: var(--lara);
+				font-weight: bold;
+				}
+			UL#main LI {
+				display: table-row;
+				float: clear;
+				}
+			UL LI UL LI {
+				float: left;
+				list-style-type: none; 
+				border: solid 1px steelblue; padding: 4px;
+				display: table-cell;
+				font-family: var(--helv);
+				}
+			UL#main > LI  > UL > li:nth-child(1) { width: 40px; }
+			UL#main > LI  > UL > li:nth-child(2) { width: 70px; }
+			UL#main > LI  > UL > li:nth-child(3) { width: 70px; }
+			UL#main > LI  > UL > li:nth-child(4) { width: 80px; }
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				addItem(0,sNoItens, "No Item","Tipo Item", "Quantidade");
+				}
+			function addItem(num, a1, a2, a3, a4){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				o.append("<li id=\"it"+sNoItens+"\"></li>");
+				var o1 = $("LI#it"+sNoItens);
+				o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+				var o2 = $("UL#it"+sNoItens);
+				o2.append("<li>"+(num+noIt)+"</li>");
+				o2.append("<li>"+a2+"</li>");
+				o2.append("<li>"+a3+"</li>");
+				o2.append("<li>"+a4+"</li>");
+				noIt++;				
+				}
+		</script>
+</head>
+<body onload="init();">
+	<button onclick="addItem(10,'&bull;','10','0102','100')">Adiciona Item</button>
+	<ul id="main">
+	</ul>
+	<div id="frm">
+		<h1>Entrada de Itens</h1>
+		<table>
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><input id="fmTpItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number"></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
+

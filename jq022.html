@@ -1,0 +1,366 @@
+<html>
+<head>
+		<title>jq020</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<link rel="stylesheet" href="estilo_vermelho.css" />
+		<link rel="stylesheet" href="estilo.css" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq019.html -->
+		<!--
+				***************** Funções *****************
+				
+				seleOS 			- Checa existência de OS
+				preUpd 			- Constrói a URL de atualização (Cabeçalho)
+				preSave 		- Constrói a URL de registro novo (Cabeçalho)
+				preSaveItens	- Constrói a URL de registro novo (Itens)
+				gravaReg 		- Dispara o fetch de atualização ou de gravação (Cabeçalho)
+				html_tpServ 	- Constrói o HTML do componente SELECT de Tipos de Serviços
+				init 				- Inicia os procedimentos quando a página termina de carregar
+				checaCampos	- Verifica se todos os campos do Cabeçalho foram preenchidos
+				listNos			- Lista a árvore dos UL/LIs dos itens (TODO: passar o array JSON para PHP)
+				addReg			- Adiciona o item preenchido no formulário de itens
+				delItem			- Marca um dos itens para deleção ou não gravação
+				recItem			- Desmarca um item que foi marcado para deleção ou não gravação
+				edtItem			- Edita um item
+				addItem			- Transporta o item do formulário de item para a tabela de itens
+				clearCab		- Limpa todos os campos do cabeçalho
+		-->
+		<style>
+
+
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript" src="TpServ.js">
+
+		</script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			/*
+				FUNÇÕES DE FETCH AO BANCO DE DADOS, VIA PHP
+			*/
+			function seleOS(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Sele" ){
+							// Preenche os campos do cabeçalho com aqueles achados para a OS fornecida 
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							// Habilita botão de atualização
+							$("BUTTON#btnCabUpd").attr('class', '');
+							$("BUTTON#btnCabSave").attr('class', 'disabled');
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não EXISTE');
+						return;
+						});				
+				}
+			// Funções de manutenção dos registros
+			// Tipo Save: "save" ou "edit" ou "delete" ou "sele"
+			// Ajusta a URL de atualização de Cabeçalho
+			function preUpd(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			// Ajusta a URL de gravação de Cabeçalho
+			function preSave(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			// Ajusta a URL de gravação dos itens
+			function preSaveItens(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+
+				gravaItem(txtUrl, tipoSave);
+				}
+			// Fetch via PHP para gravar/alterar um cabeçalho de Pedido no banco de dados
+			function gravaReg(txtUrl, tipoSave){
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						// Caso o pedido já exista, e a ação requerida foi um Save ...
+						if( result[0].Id == "EXISTE" && tipoSave == "Save" ){
+							alert('Ordem de Serviço já existe. Gere outro número.');
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não gravado em função de um destes erros:\n\n1 - Tipos de dados errados (texto em lugar de número;\n\n2 - Alguma Data inválida;\n\n3 - Conteúdo excedendo o tamanho máximo do campo na tabela;\n\n4 - Caracter especial não aceito para gravação;');
+						return;
+						});
+				}
+			// Constrói um select com os tipos de serviços do Array TIPO_SERV
+			function html_tpServ(){
+				var conteudo = "";
+				var index = "";
+				var max = TIPO_SERV.length;
+				var S = "";
+				for(i=1;i<max;i++){
+					index = TIPO_SERV[i][0];
+					conteudo = TIPO_SERV[i][2];
+					S += "<option value=\"" + index + "\">" + conteudo + "</option>";
+					console.log(index+" : "+conteudo);
+					}
+				//S = "<select >" + S + "</select>";
+				return S;
+				}
+			// Inicialização: 
+			//            - Coloca os cabeçalhos de coluna
+			//            - Inicializa o estado dos botões
+			//			- Configura eventos de perda de foco para os campos do cabeçalho
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				// Ajusta condições iniciais do formulário Cabeçalho
+				addItem(0,sNoItens, "No Item","Tipo do Item", "Quantidade", "AÇÕES");
+				// Ajusta condições iniciais dos botões do formulário Cabeçalho
+				$("BUTTON#btnCabSave").attr('class', 'disabled');
+				$("BUTTON#btnCabUpd").attr('class', 'disabled');
+				// Área de eventos do formulário
+				// Checa se os três campos foram preenchidos
+				// ACRESCIMO: ver se o botão de atualização está ativado
+				$("INPUT#noOS").focusout(function() {
+					if( checaCampos() == 3 && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					seleOS("CRUD_seleNoOS.php", "Sele");
+					});
+				$("INPUT#areaDemand").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+				$("INPUT#DtIniServ").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+				$("SELECT#fmTpItem").html(html_tpServ());
+				}
+			function checaCampos(){
+				var Soma = 0;
+				Soma = ( $("INPUT#noOS").val() != '' ) + ( $("INPUT#areaDemand").val() != '' ) + ( $("INPUT#DtIniServ").val() != '' );
+				return Soma;
+				}
+			// Lista os filhos dos nós dos itens
+			function listNos(){
+				var sNoItens = null;
+				var id = null;
+				var filhos = null;
+				var netos = null;
+				var titulos = [];
+				var temp = [];
+				var dados = [];
+				var S = "";
+				var lido = "";
+				// 1a. Linha - Titulos
+				filhos = $("UL[id='it000']");
+				netos = filhos[0].children;
+				for(j=0;j<4;j++){
+					console.log(netos[j].innerText);
+					titulos.push(netos[j].innerText);
+					}
+				// Linhas de dados
+				filhos = $("UL[id^='it']");
+				for(i=1;i<filhos.length;i++){
+					console.log(filhos[i]);
+					netos = filhos[i].children;
+					temp = [];
+					dados.push(temp);
+					S += "{";
+					for(j=0;j<4;j++){
+						lido = netos[j].innerText;
+						console.log(lido);
+						dados[i-1][j] = lido;
+						S += '"' + titulos[j] + '" : "' + lido + '",'
+						}
+					S = S.substr(0,S.length-2) + '"},';
+					}
+				S = "[" + S.substr(0,S.length-2)+"} ]";
+
+				return { "json": S, "titulos": titulos, "dados": dados };
+				}
+			// Adiciona item baseado no form DIV
+			function addReg(){
+				addItem(0,"", "","", "", "");
+				}
+			// Marca para deleção um dos itens
+			function delItem(obj){
+				var o = $("UL#"+obj+" LI");
+				o.attr('class', 'inverso');
+				}
+			// Desmarca um item que fora marcado para deleção
+			function recItem(obj){
+				var o = $("UL#"+obj+" LI");
+				o.attr('class', '');
+				}
+			// Faz o preparo 
+			function edtItem(obj){
+				var o = $("UL#"+obj+" LI");
+				// Transfere os valores para o formulário de item
+				$("INPUT#fmItem").val(o[1].innerText);
+				$("SELECT#fmTPItem").val( (o[2].innerText).substr(0,1) );
+				$("INPUT#fmQtd").val(o[3].innerText);
+				o.remove();
+				}
+			// Adiciona um item (coluna de cabeçalho ou registro)
+			function addItem(num, a1, a2, a3, a4, a5){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				var botoesAcoes = "";
+				botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
+				botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
+				botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
+					alert("Preencha o Número do Item, o Tipo e a Quantidade");
+					} else {
+					o.append("<li id=\"it"+sNoItens+"\"></li>");
+					var o1 = $("LI#it"+sNoItens);
+					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+					var o2 = $("UL#it"+sNoItens);
+					//o2.append("<li>"+(num+noIt)+"</li>");
+					// Testa se é título
+					if( noIt == 0 ){
+						o2.append("<li class=tit>Ordem</li>");
+						o2.append("<li class=tit>"+a2+"</li>");
+						o2.append("<li class=tit>"+a3+"</li>");
+						o2.append("<li class=tit>"+a4+"</li>");
+						o2.append("<li class=tit>"+a5+"</li>");
+						} else {
+						o2.append("<li>"+(num+noIt)+"</li>");
+						o2.append("<li>"+$("#fmItem").val()+"</li>");
+						o2.append("<li>"+$("#fmTpItem").val()+"-"+TIPO_SERV[$("#fmTpItem").val()][2]+"</li>");
+						o2.append("<li>"+$("#fmQtd").val()+"</li>");
+						o2.append("<li>"+botoesAcoes+"</li>");
+						// Refresh events
+						$("BUTTON.acoes").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							delItem(o);
+							});
+						$("BUTTON.del").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							recItem(o);
+							});
+						$("BUTTON.edt").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							edtItem(o);
+							});
+						}
+					noIt++;
+					}
+				}
+				function clearCab(){
+					// Limpa os campos do formulário cabeçalho
+					$("INPUT#noOS").val("");
+					$("INPUT#areaDemand").val("");
+					$("INPUT#DtIniServ").val("");
+					$("TEXTAREA#Descri").val("");
+					// Desabilita botões
+					$("BUTTON#btnCabSave").attr('class', 'disabled');
+					$("BUTTON#btnCabUpd").attr('class', 'disabled');
+					}
+		</script>
+</head>
+<!--
+	CORPO DA PÁGINA:
+	Função init é um padrão, apontando o fim do carregamento da página, e a garantia
+	de que todos os controles referenciados pelo jQuery acabaram de ser carregados.
+-->
+<body onload="init();">
+	<!-- 
+		Cabeçalho do pedido 
+	-->
+	<div id="pedido">
+		<center>
+			<h1 class="big"><b>P e d i d o</b></h1>
+			<table>
+				<tr>
+					<td><label>No. OS:</label></td><td><input id="noOS" name="noOS" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Área Demandante:</label></td><td><input name="areaDemand" id="areaDemand" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Data Início<br>Serviço:</label></td><td><input name="dtIniServ" id="dtIniServ" type="date"></td>
+				</tr>
+				<tr>
+					<td><label>Descrição:</label></td><td><textarea name="descri" id="descri" cols=40 rows=5></textarea></td>
+				</tr>
+			</table>
+			<button id="btnCabSave" onclick="preSave('CRUD_add.php','Save')">Inclui Pedido</button>
+			<button id="btnCabUpd" onclick="preUpd('CRUD_upd.php','Update')">Atualiza Pedido</button>
+			<button id="btnCabClr" onclick="clearCab()">Limpa os campos</button>
+		</center>
+	</div>
+	<!-- 
+		Itens do pedido 
+	-->
+	<ul id="main">
+
+	</ul>
+	<div id="frm">
+		<h1 align=center>Entrada de Itens<br>do Pedido</h1>
+		<table>
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><select id="fmTpItem" type="text"></select></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number"></td>
+			</tr>
+		</table>
+		<center>
+			<button onclick="addReg()">Adiciona Item</button>
+			<button onclick="listNos(noIt)">Grava</button>
+			
+		</center>
+	</div>
+</body>
+</html>
+

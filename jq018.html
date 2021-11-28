@@ -1,0 +1,264 @@
+<html>
+<head>
+		<title>jq018</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<link rel="stylesheet" href="estilo_verde.css" />
+		<link rel="stylesheet" href="estilo.css" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq007.html?NoItens=9 -->
+		<style>
+
+
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			function seleOS(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Sele" ){
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							// Habilita botão de atualização
+							$("BUTTON#btnCabUpd").attr('class', '');
+							$("BUTTON#btnCabSave").attr('class', 'disabled');
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não EXISTE');
+						return;
+						});				
+				}
+			// Funções de manutenção dos registros
+			// Tipo Save: "save" ou "edit" ou "delete" ou "sele"
+			function preUpd(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			function preSave(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			function gravaReg(txtUrl, tipoSave){
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Save" ){
+							alert('Ordem de Serviço já existe. Gere outro número.');
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não gravado em função de um destes erros:\n\n1 - Tipos de dados errados (texto em lugar de número;\n\n2 - Alguma Data inválida;\n\n3 - Conteúdo excedendo o tamanho máximo do campo na tabela;\n\n4 - Caracter especial não aceito para gravação;');
+						return;
+						});
+				}
+			// Inicialização: coloca os cabeçalhos de coluna
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				// Ajusta condições iniciais do formulário Cabeçalho
+				addItem(0,sNoItens, "No Item","Tipo do Item", "Quantidade", "AÇÕES");
+				// Ajusta condições iniciais dos botões do formulário Cabeçalho
+				$("BUTTON#btnCabSave").attr('class', 'disabled');
+				$("BUTTON#btnCabUpd").attr('class', 'disabled');
+				// Área de eventos do formulário
+				// Checa se os três campos foram preenchidos
+				// ACRESCIMO: ver se o botão de atualização está ativado
+				$("INPUT#noOS").focusout(function() {
+					if( checaCampos() == 3 && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					seleOS("CRUD_seleNoOS.php", "Sele");
+					});
+				$("INPUT#areaDemand").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+				$("INPUT#DtIniServ").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+
+				}
+			function checaCampos(){
+				var Soma = 0;
+				Soma = ( $("INPUT#noOS").val() != '' ) + ( $("INPUT#areaDemand").val() != '' ) + ( $("INPUT#DtIniServ").val() != '' );
+				return Soma;
+				}
+			// Lista os filhos dos nós dos itens
+			function listNos(noNos){
+				var sNoItens = null;
+				var id = null;
+				var filhos = null;
+				for(i=1;i<noNos;i++){
+					sNoItens = ("000"+i.toString()).substr(-3);
+					id = "it"+sNoItens;
+					filhos = $("UL#"+id)[0].children;
+					console.log(filhos);
+					}
+				}
+			// Adiciona item baseado no form DIV
+			function addReg(){
+				addItem(0,"", "","", "", "");
+				}
+			function delItem(obj){
+				alert(obj);
+				}
+			function recItem(obj){
+				alert(obj);
+				}
+			// Adiciona um item (coluna de cabeçalho ou registro)
+			function addItem(num, a1, a2, a3, a4, a5){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				var botoesAcoes = "";
+				botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
+				botoesAcoes += "<button  id=r" + sNoItens + " class=acoes>R</button>"; // Desfaz deleção
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
+					alert("Preencha o Número do Item, o Tipo e a Quantidade");
+					} else {
+					o.append("<li id=\"it"+sNoItens+"\"></li>");
+					var o1 = $("LI#it"+sNoItens);
+					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+					var o2 = $("UL#it"+sNoItens);
+					o2.append("<li>"+(num+noIt)+"</li>");
+					// Testa se é título
+					if( noIt == 0 ){
+						o2.append("<li>"+a2+"</li>");
+						o2.append("<li>"+a3+"</li>");
+						o2.append("<li>"+a4+"</li>");
+						o2.append("<li>"+a5+"</li>");
+						} else {
+						o2.append("<li>"+$("#fmItem").val()+"</li>");
+						o2.append("<li>"+$("#fmTpItem").val()+"</li>");
+						o2.append("<li>"+$("#fmQtd").val()+"</li>");
+						o2.append("<li>"+botoesAcoes+"</li>");
+						// Refresh events
+						$("BUTTON.acoes").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							delItem(o);
+							});
+						$("BUTTON.del").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							recItem(o);
+							});
+						}
+					noIt++;
+					}
+				}
+				function clearCab(){
+					// Limpa os campos do formulário cabeçalho
+					$("INPUT#noOS").val("");
+					$("INPUT#areaDemand").val("");
+					$("INPUT#DtIniServ").val("");
+					$("TEXTAREA#Descri").val("");
+					// Desabilita botões
+					$("BUTTON#btnCabSave").attr('class', 'disabled');
+					$("BUTTON#btnCabUpd").attr('class', 'disabled');
+					}
+		</script>
+</head>
+<!--
+	CORPO DA PÁGINA:
+	Função init é um padrão, apontando o fim do carregamento da página, e a garantia
+	de que todos os controles referenciados pelo jQuery acabaram de ser carregados.
+-->
+<body onload="init();">
+	<!-- 
+		Cabeçalho do pedido 
+	-->
+	<div id="pedido">
+		<center>
+			<h1 class="big"><b>P e d i d o</b></h1>
+			<table>
+				<tr>
+					<td><label>No. OS:</label></td><td><input id="noOS" name="noOS" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Área Demandante:</label></td><td><input name="areaDemand" id="areaDemand" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Data Início<br>Serviço:</label></td><td><input name="dtIniServ" id="dtIniServ" type="date"></td>
+				</tr>
+				<tr>
+					<td><label>Descrição:</label></td><td><textarea name="descri" id="descri" cols=40 rows=5></textarea></td>
+				</tr>
+			</table>
+			<button id="btnCabSave" onclick="preSave('CRUD_add.php','Save')">Inclui Pedido</button>
+			<button id="btnCabUpd" onclick="preUpd('CRUD_upd.php','Update')">Atualiza Pedido</button>
+			<button id="btnCabClr" onclick="clearCab()">Limpa os campos</button>
+		</center>
+	</div>
+	<!-- 
+		Itens do pedido 
+	-->
+	<ul id="main">
+
+	</ul>
+	<div id="frm">
+		<h1 align=center>Entrada de Itens<br>do Pedido</h1>
+		<table>
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><input id="fmTpItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number"></td>
+			</tr>
+		</table>
+		<center>
+			<button onclick="addReg()">Adiciona Item</button>
+			<button onclick="listNos(noIt)">Grava</button>
+			
+		</center>
+	</div>
+</body>
+</html>
+

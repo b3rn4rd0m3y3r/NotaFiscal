@@ -1,0 +1,335 @@
+<html>
+<head>
+		<title>jq020</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<link rel="stylesheet" href="estilo_azul.css" />
+		<link rel="stylesheet" href="estilo.css" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq019.html -->
+		<!--
+				***************** Funções *****************
+				
+				seleOS 			- Checa existência de OS
+				preUpd 			- Constrói a URL de atualização (Cabeçalho)
+				preSave 		- Constrói a URL de registro novo (Cabeçalho)
+				gravaReg 		- Dispara o fetch de atualização ou de gravação (Cabeçalho)
+				html_tpServ 	- Constrói o HTML do componente SELECT de Tipos de Serviços
+				init 				- Inicia os procedimentos quando a página termina de carregar
+				checaCampos	- Verifica se todos os campos do Cabeçalho foram preenchidos
+				listNos			- Lista a árvore dos UL/LIs dos itens
+				addReg			- Adiciona o item preenchido no formulário de itens
+				delItem			- Marca um dos itens para deleção ou não gravação
+				recItem			- Desmarca um item que foi marcado para deleção ou não gravação
+				edtItem			- Edita um item
+				addItem			- Transporta o item do formulário de item para a tabela de itens
+				clearCab		- Limpa todos os campos do cabeçalho
+		-->
+		<style>
+
+
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript">
+		var TIPO_SERV = [
+				["No","Descri","Resumo","Quant"," VrUnit ","VrTotal","Item"],
+				[1,"Clientes residenciais e não residenciais REGIÃO METROPOLITANA E INTERIOR - telefone fixo e móvel até 15 minutos","Clientes resid/não resid RMBH/Interior tel fixo/móvel até 15 min",7.680," R$ 57,60 "," R$442.368,00 ","PESQUISA TELEFÔNICA"],
+				[2,"Clientes residenciais e não residenciais REGIÃO METROPOLITANA E INTERIOR - telefone fixo e móvel até 30 minutos","Clientes resid/não resid RMBH/Interior tel fixo/móvel até 30 min",7.680," R$ 72,00 "," R$552.960,00 ","PESQUISA TELEFÔNICA"],
+				[3,"Clientes residenciais e não residenciais REGIÃO METROPOLITANA E INTERIOR - telefone fixo e móvel até 50 minutos","Clientes resid/não resid RMBH/Interior tel fixo/móvel até 50 min",7.680," R$ 76,80 "," R$589.824,00 ","PESQUISA TELEFÔNICA"],
+				[4,"Clientes residenciais e não residenciais - REGIÃO METROPOLITANA DE BH – até 20 minutos","Clientes resid/não resid RMBH até 20 min",1.500," R$ 67,20 "," R$100.800,00 ","PESQUISA PRESENCIAL"],
+				[5,"Clientes residenciais e não residenciais - REGIÃO METROPOLITANA DE BH – até 40 minutos","Clientes resid/não resid RMBH até 40 min",1.500," R$ 84,00 "," R$126.000,00 ","PESQUISA PRESENCIAL"],
+				[6,"Clientes residenciais e não residenciais - CIDADES DO INTERIOR DE MG - até 20 minutos","Clientes resid/não resid INTERIOR até 20 min",1.500," R$ 76,80 "," R$115.200,00 ","PESQUISA PRESENCIAL"],
+				[7,"Clientes residenciais e não residenciais - CIDADES DO INTERIOR DE MG - até 40 minuto","Clientes resid/não resid INTERIOR até 40 min",1.500," R$ 86,40 "," R$129.600,00 ","PESQUISA PRESENCIAL"],
+				[8,"Clientes residenciais e não residenciais - REGIÃO METROPOLITANA DE BH","Clientes resid/não resid RMBH",36," R$ 13.900,80 "," R$500.428,80 ","FOCUS GROUP"],
+				[9,"Clientes residenciais e não residenciais - CIDADES DO INTERIOR DE MG","Clientes resid/não resid INTERIOR",24," R$ 12.000,00 "," R$288.000,00 ","FOCUS GROUP"],
+				[10,"Clientes residenciais e não residenciais, e poder concedente (PREFEITURAS)","Clientes resid/não resid e PREFEITURAS",140," R$ 1.440,00 "," R$201.600,00 ","ENTREVISTA EM PROFUNDIDADE"],
+				[11,"Analista técnico (em horas disponibilizada)","Analista técnico (em horas disponibilizada)",1.800," R$ 105,60 "," R$190.080,00 ","ANALISTA TÉCNICO"],
+				[12,"Desenvolvimento de sistema para visualização online dos dados produzidos mensal por Unidade de Negócios (Dashboard Mensal)","Desenv. de sistema p/visualização online dos dados mensal p/Unid. de Negócios (Dashboard Mensal)",36," R$ 2.880,00 "," R$103.680,00 ","RELATÓRIO DE ACOMPANHAMENTO MENSAL"],
+				[13,"Pesquisas respondidas","Pesquisas respondidas",300.000," R$ 0,96 "," R$288.000,00 ","PESQUISAS DE SATISFAÇÃO DE ATENDIMENTO - NPS (NET PROMOTER SCORE)"]
+				];
+		</script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			function seleOS(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Sele" ){
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							// Habilita botão de atualização
+							$("BUTTON#btnCabUpd").attr('class', '');
+							$("BUTTON#btnCabSave").attr('class', 'disabled');
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não EXISTE');
+						return;
+						});				
+				}
+			// Funções de manutenção dos registros
+			// Tipo Save: "save" ou "edit" ou "delete" ou "sele"
+			function preUpd(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			function preSave(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$("INPUT#noOS").val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				gravaReg(txtUrl, tipoSave);
+				}
+			function gravaReg(txtUrl, tipoSave){
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Save" ){
+							alert('Ordem de Serviço já existe. Gere outro número.');
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não gravado em função de um destes erros:\n\n1 - Tipos de dados errados (texto em lugar de número;\n\n2 - Alguma Data inválida;\n\n3 - Conteúdo excedendo o tamanho máximo do campo na tabela;\n\n4 - Caracter especial não aceito para gravação;');
+						return;
+						});
+				}
+			// Constrói um select com os tipos de serviços do Array TIPO_SERV
+			function html_tpServ(){
+				var conteudo = "";
+				var index = "";
+				var max = TIPO_SERV.length;
+				var S = "";
+				for(i=1;i<max;i++){
+					index = TIPO_SERV[i][0];
+					conteudo = TIPO_SERV[i][2];
+					S += "<option value=\"" + index + "\">" + conteudo + "</option>";
+					console.log(index+" : "+conteudo);
+					}
+				//S = "<select >" + S + "</select>";
+				return S;
+				}
+			// Inicialização: 
+			//            - Coloca os cabeçalhos de coluna
+			//            - Inicializa o estado dos botões
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				// Ajusta condições iniciais do formulário Cabeçalho
+				addItem(0,sNoItens, "No Item","Tipo do Item", "Quantidade", "AÇÕES");
+				// Ajusta condições iniciais dos botões do formulário Cabeçalho
+				$("BUTTON#btnCabSave").attr('class', 'disabled');
+				$("BUTTON#btnCabUpd").attr('class', 'disabled');
+				// Área de eventos do formulário
+				// Checa se os três campos foram preenchidos
+				// ACRESCIMO: ver se o botão de atualização está ativado
+				$("INPUT#noOS").focusout(function() {
+					if( checaCampos() == 3 && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					seleOS("CRUD_seleNoOS.php", "Sele");
+					});
+				$("INPUT#areaDemand").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+				$("INPUT#DtIniServ").focusout(function() {
+					if( checaCampos() == 3  && $("BUTTON#btnCabUpd").attr('class') == "disabled" ){ $("BUTTON#btnCabSave").attr('class', ''); }
+					});
+				$("SELECT#fmTpItem").html(html_tpServ());
+				}
+			function checaCampos(){
+				var Soma = 0;
+				Soma = ( $("INPUT#noOS").val() != '' ) + ( $("INPUT#areaDemand").val() != '' ) + ( $("INPUT#DtIniServ").val() != '' );
+				return Soma;
+				}
+			// Lista os filhos dos nós dos itens
+			function listNos(noNos){
+				var sNoItens = null;
+				var id = null;
+				var filhos = null;
+				for(i=1;i<noNos;i++){
+					sNoItens = ("000"+i.toString()).substr(-3);
+					id = "it"+sNoItens;
+					filhos = $("UL#"+id)[0].children;
+					console.log(filhos);
+					}
+				}
+			// Adiciona item baseado no form DIV
+			function addReg(){
+				addItem(0,"", "","", "", "");
+				}
+			function delItem(obj){
+				var o = $("UL#"+obj+" LI");
+				o.attr('class', 'inverso');
+				}
+			function recItem(obj){
+				var o = $("UL#"+obj+" LI");
+				o.attr('class', '');
+				}
+			function edtItem(obj){
+				var o = $("UL#"+obj+" LI");
+				// Transfere os valores para o formulário de item
+				$("INPUT#fmItem").val(o[1].innerText);
+				$("SELECT#fmTPItem").val( (o[2].innerText).substr(0,1) );
+				$("INPUT#fmQtd").val(o[3].innerText);
+				o.remove();
+				}
+			// Adiciona um item (coluna de cabeçalho ou registro)
+			function addItem(num, a1, a2, a3, a4, a5){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				var botoesAcoes = "";
+				botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
+				botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
+				botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
+					alert("Preencha o Número do Item, o Tipo e a Quantidade");
+					} else {
+					o.append("<li id=\"it"+sNoItens+"\"></li>");
+					var o1 = $("LI#it"+sNoItens);
+					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+					var o2 = $("UL#it"+sNoItens);
+					//o2.append("<li>"+(num+noIt)+"</li>");
+					// Testa se é título
+					if( noIt == 0 ){
+						o2.append("<li class=tit>Ordem</li>");
+						o2.append("<li class=tit>"+a2+"</li>");
+						o2.append("<li class=tit>"+a3+"</li>");
+						o2.append("<li class=tit>"+a4+"</li>");
+						o2.append("<li class=tit>"+a5+"</li>");
+						} else {
+						o2.append("<li>"+(num+noIt)+"</li>");
+						o2.append("<li>"+$("#fmItem").val()+"</li>");
+						o2.append("<li>"+$("#fmTpItem").val()+"-"+TIPO_SERV[$("#fmTpItem").val()][2]+"</li>");
+						o2.append("<li>"+$("#fmQtd").val()+"</li>");
+						o2.append("<li>"+botoesAcoes+"</li>");
+						// Refresh events
+						$("BUTTON.acoes").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							delItem(o);
+							});
+						$("BUTTON.del").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							recItem(o);
+							});
+						$("BUTTON.edt").click(function(e){
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							edtItem(o);
+							});
+						}
+					noIt++;
+					}
+				}
+				function clearCab(){
+					// Limpa os campos do formulário cabeçalho
+					$("INPUT#noOS").val("");
+					$("INPUT#areaDemand").val("");
+					$("INPUT#DtIniServ").val("");
+					$("TEXTAREA#Descri").val("");
+					// Desabilita botões
+					$("BUTTON#btnCabSave").attr('class', 'disabled');
+					$("BUTTON#btnCabUpd").attr('class', 'disabled');
+					}
+		</script>
+</head>
+<!--
+	CORPO DA PÁGINA:
+	Função init é um padrão, apontando o fim do carregamento da página, e a garantia
+	de que todos os controles referenciados pelo jQuery acabaram de ser carregados.
+-->
+<body onload="init();">
+	<!-- 
+		Cabeçalho do pedido 
+	-->
+	<div id="pedido">
+		<center>
+			<h1 class="big"><b>P e d i d o</b></h1>
+			<table>
+				<tr>
+					<td><label>No. OS:</label></td><td><input id="noOS" name="noOS" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Área Demandante:</label></td><td><input name="areaDemand" id="areaDemand" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Data Início<br>Serviço:</label></td><td><input name="dtIniServ" id="dtIniServ" type="date"></td>
+				</tr>
+				<tr>
+					<td><label>Descrição:</label></td><td><textarea name="descri" id="descri" cols=40 rows=5></textarea></td>
+				</tr>
+			</table>
+			<button id="btnCabSave" onclick="preSave('CRUD_add.php','Save')">Inclui Pedido</button>
+			<button id="btnCabUpd" onclick="preUpd('CRUD_upd.php','Update')">Atualiza Pedido</button>
+			<button id="btnCabClr" onclick="clearCab()">Limpa os campos</button>
+		</center>
+	</div>
+	<!-- 
+		Itens do pedido 
+	-->
+	<ul id="main">
+
+	</ul>
+	<div id="frm">
+		<h1 align=center>Entrada de Itens<br>do Pedido</h1>
+		<table>
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><select id="fmTpItem" type="text"></select></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number"></td>
+			</tr>
+		</table>
+		<center>
+			<button onclick="addReg()">Adiciona Item</button>
+			<button onclick="listNos(noIt)">Grava</button>
+			
+		</center>
+	</div>
+</body>
+</html>
+

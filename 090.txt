@@ -1,0 +1,12 @@
+
+[{"NoOS":"090"},{"classe":"null","Ordem":"2","NoItem":"a","TipodoItem":"8-Clientes resid-não resid RMBH","Quantidade":"345"},{"classe":"inverso","Ordem":"4","NoItem":"b","TipodoItem":"1-Clientes resid-não resid RMBH-Interior tel fixo/móvel até 15 min","Quantidade":"670"},{"classe":"null","Ordem":"6","NoItem":"c","TipodoItem":"7-Clientes resid-não resid INTERIOR até 40 min","Quantidade":"430"},{"classe":"null","Ordem":"8","NoItem":"d","TipodoItem":"1-Clientes resid-não resid RMBH-Interior tel fixo/móvel até 15 min","Quantidade":"130"}]
+No. Itens: 
+002
+Update: 090-a-8-Clientes resid-não resid RMBH-345
+004
+Delete: 090-b-1-Clientes resid-não resid RMBH-Interior tel fixo/móvel até 15 min
+006
+Update: 090-c-7-Clientes resid-não resid INTERIOR até 40 min-430
+008
+Insert: 090-d-1-Clientes resid-não resid RMBH-Interior tel fixo/móvel até 15 min-130
+<li id=it002><ul id=it002><li>1</li><li>a</li><li>8-Clientes resid-não resid RMBH</li><li>345</li><li class=painel></li></ul></li><li id=it006><ul id=it006><li>3</li><li>c</li><li>7-Clientes resid-não resid INTERIOR até 40 min</li><li>430</li><li class=painel></li></ul></li><li id=it008><ul id=it008><li>4</li><li>d</li><li>1-Clientes resid-não resid RMBH-Interior tel fixo/móvel até 15 min</li><li>130</li><li class=painel></li></ul></li>

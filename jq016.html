@@ -4,9 +4,9 @@
 		<link rel="shortcut icon" href="favicon.ico" />
 		<meta charset="iso-8859-1"/>
 		<meta name="author" content="Bernardo Meyer">
-		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
+		<meta name="description" content="Atualização do registro, caso a OS já exista.">
 		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
-		<!-- Chamada: jq007.html?NoItens=9 -->
+		<!-- Chamada: jq016.html?NoItens=9 -->
 		<style>
 			:root {
 				--ftpad: Verdana;
@@ -111,7 +111,7 @@
 				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
 				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
 				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
-				atualizaReg(txtUrl, tipoSave);
+				gravaReg(txtUrl, tipoSave);
 				}
 			function preSave(txtUrl, tipoSave){
 				txtUrl += "?NoOs="+$("INPUT#noOS").val();

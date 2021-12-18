@@ -6,9 +6,9 @@
 		<link rel="stylesheet" href="estilo.css" />
 		<meta charset="iso-8859-1"/>
 		<meta name="author" content="Bernardo Meyer">
-		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
+		<meta name="description" content="Isolamento e indeterminação dos estilos. Botões de ação dos itens.">
 		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
-		<!-- Chamada: jq007.html?NoItens=9 -->
+		<!-- Chamada: jq018.html?NoItens=9 -->
 		<style>
 
 
@@ -156,7 +156,7 @@
 				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
 				var botoesAcoes = "";
 				botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
-				botoesAcoes += "<button  id=r" + sNoItens + " class=acoes>R</button>"; // Desfaz deleção
+				botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
 				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
 					alert("Preencha o Número do Item, o Tipo e a Quantidade");
 					} else {

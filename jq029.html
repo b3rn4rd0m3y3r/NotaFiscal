@@ -1,0 +1,566 @@
+<html>
+<head>
+		<title>jq029</title>
+		<link rel="shortcut icon" href="favicon.ico" />
+		<link id="pgestilo" rel="stylesheet" href="estilo_laranja.css" />
+		<link rel="stylesheet" href="estilo.css" />
+		<meta charset="iso-8859-1"/>
+		<meta name="author" content="Bernardo Meyer">
+		<meta name="description" content="Colocação de função para abortar a continuação do fetch de leitura de arquivo txt dos itens.">
+		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
+		<!-- Chamada: jq027.html -->
+		<!-- TODO: checar quantidade (Ex: select sum(Quantidade) from PedidoItens where TpItem Like '1-Clientes resid%') -->
+		<!--
+				***************** Funções *****************
+				
+				dmkBtGrava	- Desmarca o botão grava, para que o usuário se lembre de que não existem mais gravações pendentes
+				mkBtGrava		- Marca o botão grava, para que o usuário se lembre de que existem gravações pendentes
+				abortFetch		- Aborta uma requisição fetch pelo seu controller
+				mostrAviso		- Exibe um aviso por 4 segundos
+				escondAviso	- Esconde novamente o aviso
+				loadItens		- Carrega os itens previamente gravados
+				seleOS 			- Checa existência de OS
+				preUpd 			- Constrói a URL de atualização (Cabeçalho)
+				preSave 		- Constrói a URL de registro novo (Cabeçalho)
+				preSaveItens	- Constrói a URL de registro novo (Itens)
+				gravaReg 		- Dispara o fetch de atualização ou de gravação (Cabeçalho)
+				html_tpServ 	- Constrói o HTML do componente SELECT de Tipos de Serviços (TpServ_Func.js)
+				init 				- Inicia os procedimentos quando a página termina de carregar
+				checaCampos	- Verifica se todos os campos do Cabeçalho foram preenchidos
+				listNos			- Lista a árvore dos UL/LIs dos itens (TODO: passar o array JSON para PHP)
+				gravaItens		- Providencia a gravação dos itens da nota
+				addReg			- Adiciona o item preenchido no formulário de itens
+				delItem			- Marca um dos itens para deleção ou não gravação
+				recItem			- Desmarca um item que foi marcado para deleção ou não gravação
+				edtItem			- Edita um item
+				addItem			- Transporta o item do formulário de item para a tabela de itens
+				clearCab		- Limpa todos os campos do cabeçalho
+				contaItem		- Checa, na tabela de PedidoItens, a quantidade já utilizada do tipo pedido
+				chkQtd			- Detecta quais os dois primeiros dígitos do tipo pedido e chama contaItem
+		-->
+		<style>
+			BUTTON.pq {height: 10px;width: 12px;font-size: 12px;padding: 0px;margin-right: 0px; margin-left: 0px;left: 1px;float:left;}
+			BUTTON#Az {background-color: teal;}
+			BUTTON#Cz {background-color: gold;}
+			BUTTON#Vd {background-color: MediumSeaGreen;}
+			BUTTON#Vm {background-color: red;}
+			BUTTON#Cz {background-color: gray;}
+		</style>
+		<script type="text/javascript" src="jquery-3.1.0.js"></script>
+		<script type="text/javascript" src="Tools.js"></script>
+		<script type="text/javascript" src="TpServ_New.js"></script>
+
+		</script>
+		<script type="text/javascript">
+			var o = null;
+			var noIt = 0;
+			var headerISO = 'application/x-www-form-urlencoded; charset=iso-8859-1';
+			const controller = new AbortController();
+			const signal = controller.signal;
+			const BT_CabSave = "BUTTON#btnCabSave";
+			const BT_CabUpd = "BUTTON#btnCabUpd";
+			const IN_OS = "INPUT#noOS";
+			function trocaStyleSheet(sheet) {
+				document.getElementById("pgestilo").setAttribute("href", sheet);  
+				}
+			/*
+				FUNÇÕES DE FETCH AO BANCO DE DADOS, VIA PHP
+			*/
+			// Botão Grava (lado direito) tem dimensão 49 x 22 px
+			function mkBtGrava() {
+				var o = $("BUTTON#grvIt");
+				o.css('height','44px');
+				o.css('width','74px');
+				o.css('font-size','22px');
+				}
+			// Volta botão ao estado normal
+			function dmkBtGrava() {
+				var o = $("BUTTON#grvIt");
+				o.css('height','22px');
+				o.css('width','54px');
+				o.css('font-size','14px');
+				}
+			// Aborta um fetch de controller específico
+			function abortFetch() {
+				console.log('Abortando leitura dos itens');
+				// Abort.
+				controller.abort();
+			}
+			// Carrega os itens do pedido a partir de um arquivo txt,
+			// cujo nome é <No. da OS>.txt
+			function loadItens(NoOS){
+				console.log("Load Itens.");
+				// Headers fetch
+				var myHeaders = new Headers();
+				myHeaders.append('Content-Type','text/plain; charset=utf-8');
+				myHeaders.append('signal',signal);
+				// Faz a requisição do arquivo texto com os itens
+				fetch(NoOS+'.txt', myHeaders)
+					.then(function (response) {
+						if (!response.ok) { 
+							mostrAviso("Pedido sem itens.");
+							abortFetch();
+							return;
+							//throw response ;
+							}
+						return response.arrayBuffer();
+					})
+					.then(function (buffer) {
+						if( typeof(buffer) == "undefined" ){
+							return;
+							}
+						const decoder = new TextDecoder('iso-8859-1');
+						const text = decoder.decode(buffer);
+						console.log(text);
+						// Parte o buffer em linhas de texto
+						var arr = text.split("\r\n");
+						// Linha 0: Formato HTML ou vazio
+						console.log(arr[0]);
+						// Linha 1: Formato JSON
+						console.log(arr[1]);
+						var jarr = JSON.parse(arr[1]);
+						// Carrega itens no Form de itens para depois adicioná-los à table de itens -VARIÁVEL
+						for(i=1;i<jarr.length;i++){
+							$("INPUT#fmItem").val( jarr[i].NoItem);
+							$("SELECT#fmTPItem").val((jarr[i].TipodoItem).substr(0,1));
+							$("INPUT#fmQtd").val( jarr[i].Quantidade);
+							// As linhas com classe "inverso" são as marcadas para deleção ou não inclusão
+							if( jarr[i].classe != "inverso" ){
+								addItem(i,i, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
+								}
+							}
+					}).catch(function() {
+						console.log("Arquivo paralelo de registro não existente. Pedido não contém itens.");
+						return;
+						});				
+				}
+			// Procura uma OS cujo número está no parâmetro NoOS
+			function seleOS(txtUrl, tipoSave){
+				console.log(txtUrl);
+				var NumOS = $(IN_OS).val();
+				txtUrl += "?NoOs="+NumOS;
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': headerISO
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						if( result[0].Id == "EXISTE" && tipoSave == "Sele" ){
+							mostrAviso("Registro Existente");
+							// Limpa toda a OS
+							clearCab();
+							// Repõe o número da OS
+							$(IN_OS).val(NumOS);
+							// Preenche os campos do cabeçalho com aqueles achados para a OS fornecida - VARIÁVEL
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							// Habilita botão de atualização
+							$("BUTTON#btnCabUpd").attr('class', '');
+							// Desabilita botão de gravação
+							$("BUTTON#btnCabSave").attr('class', 'disabled');
+							// Carrega itens
+							mostrAviso("Carregando itens ...");
+							loadItens($(IN_OS).val());
+							}
+						})
+					.catch(function() {
+						console.log("Error");
+						alert('Registro não EXISTE');
+						return;
+						});				
+				}
+			// Funções de manutenção dos registros
+			// Tipo Save: "save" ou "edit" ou "delete" ou "sele"
+			// Ajusta a URL de atualização de Cabeçalho de OS - VARIÁVEL
+			function fazURL(txtUrl){
+				txtUrl += "?NoOs="+$(IN_OS).val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				txtUrl += "&DtIniServ="+$("INPUT#dtIniServ").val();
+				txtUrl += "&Descri="+$("TEXTAREA#descri").val();
+				return txtUrl;
+				}
+			// Ajusta a URL de atualização do cabeçalho
+			function preUpd(txtUrl, tipoSave){
+				txtUrl = fazURL(txtUrl);
+				gravaReg(txtUrl, tipoSave);
+				}
+			// Ajusta a URL de gravação de Cabeçalho
+			function preSave(txtUrl, tipoSave){
+				txtUrl = fazURL(txtUrl);
+				gravaReg(txtUrl, tipoSave);
+				}
+			// Ajusta a URL de gravação dos itens - VARIÁVEL
+			function preSaveItens(txtUrl, tipoSave){
+				txtUrl += "?NoOs="+$(IN_OS).val();
+				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
+				gravaItem(txtUrl, tipoSave);
+				}
+			// Fetch via PHP para gravar/alterar um cabeçalho de Pedido no banco de dados
+			function gravaReg(txtUrl, tipoSave){
+				// Opções para fetch
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': headerISO
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				console.log(txtUrl);
+				fetch(txtUrl,options)
+				  .then( function(response){
+						if (!response.ok) { throw response }
+						mostrAviso("Gravando cabeçalho.");
+						return response.json()  //we only get here if there is no error
+					  })
+					.then(function (result) {
+						// Caso o pedido já exista, e a ação requerida foi um Save ...  - VARIÁVEL
+						if( result[0].Id == "EXISTE" && tipoSave == "Save" ){
+							alert('Ordem de Serviço já existe. Gere outro número.');
+							$("INPUT#areaDemand").val(result[2].AreaDemand);
+							$("INPUT#dtIniServ").val(result[3].DtIniServ);
+							$("TEXTAREA#descri").val(result[4].Descri);
+							}
+						this.todos =  result;  
+						})
+					.catch(function() {
+						console.log("error");
+						alert('Registro não gravado em função de um destes erros:\n\n1 - Tipos de dados errados (texto em lugar de número;\n\n2 - Alguma Data inválida;\n\n3 - Conteúdo excedendo o tamanho máximo do campo na tabela;\n\n4 - Caracter especial não aceito para gravação;');
+						return;
+						});
+				}
+			/*
+					INICIALIZAÇÃO: 
+			            - Coloca os cabeçalhos de coluna
+			            - Inicializa o estado dos botões
+					- Configura eventos de perda de foco para os campos do cabeçalho
+			*/
+			function init(){
+				const urlParams = new URLSearchParams(window.location.search);
+				const NoItens = urlParams.get('NoItens');
+				var sNoItens = ("000"+NoItens).substr(-3);
+				// Ajusta condições iniciais do formulário Cabeçalho
+				addItem(0,sNoItens, "No Item","Tipo do Item", "Quantidade", "AÇÕES");
+				// Ajusta condições iniciais dos botões do formulário Cabeçalho
+				$(BT_CabSave).attr('class', 'disabled');
+				$(BT_CabUpd).attr('class', 'disabled');
+				// Área de eventos do formulário
+				// Checa se os três campos foram preenchidos
+				// ACRESCIMO: ver se o botão de atualização está ativado
+				$(IN_OS).focusout(function() {
+					if( checaCampos() == 3 && $(BT_CabUpd).attr('class') == "disabled" ){ $(BT_CabSave).attr('class', ''); }
+					seleOS("CRUD_seleNoOS.php", "Sele");
+					});
+				$("INPUT#areaDemand").focusout(function() {
+					if( checaCampos() == 3  && $(BT_CabUpd).attr('class') == "disabled" ){ $(BT_CabSave).attr('class', ''); }
+					});
+				$("INPUT#DtIniServ").focusout(function() {
+					if( checaCampos() == 3  && $(BT_CabUpd).attr('class') == "disabled" ){ $(BT_CabSave).attr('class', ''); }
+					});
+				// Preenche a "cortina" de tipos de pesquisas
+				$("SELECT#fmTpItem").html(html_tpServ());
+				}
+			// Verifica se os três campos do item foram preenchidos
+			function checaCampos(){
+				var Soma = 0;
+				Soma = ( $(IN_OS).val() != '' ) + ( $("INPUT#areaDemand").val() != '' ) + ( $("INPUT#DtIniServ").val() != '' );
+				return Soma;
+				}
+			// Lista os filhos dos nós dos itens da estrutura UL/LI/UL/LI
+			function listNos(){
+				var sNoItens = null;
+				var id = null;
+				var filhos = null;
+				var netos = null;
+				var titulos = [];
+				var temp = [];
+				var dados = [];
+				var S = "";
+				var lido = "";
+				/*
+					1a. Linha - Titulos
+				*/
+				filhos = $("UL[id='it000']");
+				netos = filhos[0].children;
+				for(j=0;j<4;j++){
+					console.log(netos[j].innerText);
+					titulos.push((netos[j].innerText).replace(/\s/g, ""));
+					}
+				/*
+					Linhas de dados
+				*/
+				filhos = $("UL[id^='it']");
+				var classe = "";
+				for(i=1;i<filhos.length;i++){
+					classe = filhos[i].getAttribute('class');
+					//console.log(filhos[i]);
+					netos = filhos[i].children;
+					temp = [];
+					dados.push(temp);
+					S += '{ "classe" : "' + classe + '" , ' ;
+					// Lê cada uma das colunas
+					for(j=0;j<4;j++){
+						lido = netos[j].innerText;
+						console.log(lido);
+						dados[i-1][j] = lido;
+						S += '"' + titulos[j] + '":"' + lido + '",'
+						}
+					S = S.substr(0,S.length-2) + '"},';
+					}
+				S = "[" + '{ "NoOS" : "' + $("#noOS").val() + '" }, ' + S.substr(0,S.length-2)+"}]";
+				return { "json": S, "titulos": titulos, "dados": dados };
+				}
+			// Grava itens
+			function gravaItens(){
+				var ret =  listNos();
+				var jsonit = ret.json;
+				const obj = JSON.parse(jsonit);
+				// fetch em PHP de CRUD_add_itens.php
+				const options = {
+					method: 'post',
+					headers: {
+						'Content-type': headerISO
+						}
+					}
+				// Chamada AJAX
+				// .then( response => {
+				var jsonits = JSON.stringify(obj);
+				var txtUrl = "CRUD_add_itens.php";
+				console.log(txtUrl);
+				fetch(txtUrl, {
+					method: "post",
+					headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json; charset=ISO-8859-1'
+							},
+					//Certifique-se de serializar o JSON body
+					body: jsonits
+					})
+					.then(function(response){
+						mostrAviso("Gravando itens ...");
+						return response.text();
+						})
+					.then(function(){ console.log; dmkBtGrava(); })
+					.catch( (error) => {
+						mostrAviso("Erro gravando itens ...");
+						console.error('Error:', error);
+						});				
+				}
+			// Adiciona item/itens baseado no form DIV
+			function addReg(){
+				// Checa se o mínimo do cabeçalho foi preenchido
+				if( $(IN_OS).val() == "" ){
+					mostrAviso("Número de OS ausente");
+					} else {
+					if( $("INPUT#areaDemand").val() == "" ){
+						mostrAviso("Área demandante ausente");
+						} else {
+						addItem(0,"", "","", "", "");
+						mkBtGrava(); // Sinaliza que adicionou
+						}
+					}
+				}
+			// Marca para deleção um dos itens com
+			// nome de classe "inverso" no UL e LIs
+			function delItem(obj){
+				var o = $("UL#"+obj);
+				o.attr('class', 'inverso');
+				o = $("UL#"+obj+" LI");
+				o.attr('class', 'inverso');
+				}
+			// Desmarca um item que fora marcado para deleção
+			// A classe "inverso" vira "" (vazio)
+			function recItem(obj){
+				var o = $("UL#"+obj+" LI");
+				o.attr('class', '');
+				o = $("UL#"+obj);
+				o.attr('class', '');
+				}
+			// Faz o preparo da edição
+			function edtItem(obj,btn){
+				// Coleção que tem os valores
+				var o = $("UL#"+obj+" LI");
+				// Transfere os valores para o formulário de item
+				$("INPUT#fmItem").val(o[1].innerText);
+				$("SELECT#fmTPItem").val( (o[2].innerText).substr(0,1) );
+				$("INPUT#fmQtd").val(o[3].innerText);
+				//btn
+				o = $("LI#"+obj);
+				o.remove();
+				}
+			// Adiciona um item (coluna de cabeçalho ou registro)
+			function addItem(num, a1, a2, a3, a4, a5){
+				o = $("UL#main");
+				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
+				var botoesAcoes = "";
+				// Checa se os campos do item foram todos preenchidos - VARIÁVEL
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 && a5 != "LOAD" ){
+					//alert("Preencha o Número do Item, o Tipo e a Quantidade");
+					mostrAviso("Preencha o Número do Item, o Tipo e a Quantidade.");
+					} else {
+					// Procurar o último ITEM dos ITENS
+					var noelem = o[0].childElementCount;
+					// Teste se forem itens que não os títulos de coluna
+					if( noelem != 0 ){
+						var ultId = o[0].children[noelem-1].id;
+						var ultno = ultId.substr(2,3);
+						ultno = parseInt(ultno);
+						sNoItens = ("000"+(ultno+1).toString()).substr(-3);
+						} else {
+						sNoItens = "000";
+						}
+					// Colocação da classe "item" para os itens que não sejam o título
+					var htmLinha = "<li id=\"it"+sNoItens+"\"";
+					if( noelem > 0 ){
+						htmLinha += " class=\"item\"";
+						}
+					htmLinha += "></li>";
+					o.append(htmLinha);
+					var o1 = $("LI#it"+sNoItens);
+					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
+					var o2 = $("UL#it"+sNoItens);
+					//o2.append("<li>"+(num+noIt)+"</li>");
+					// Botões de ação
+					botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
+					botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
+					botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
+					// Testa se é título - VARIÁVEL
+					if( noIt == 0 ){
+						o2.append("<li class=tit>Ordem</li>");
+						o2.append("<li class=tit>"+a2+"</li>");
+						o2.append("<li class=tit>"+a3+"</li>");
+						o2.append("<li class=tit>"+a4+"</li>");
+						o2.append("<li class=tit>"+a5+"</li>");
+						} else {
+						o2.append("<li>"+(num+noIt)+"</li>");
+						o2.append("<li>"+$("#fmItem").val()+"</li>");
+						o2.append("<li>"+$("#fmTpItem").val()+"-"+TIPO_SERV[parseInt($("#fmTpItem").val())][2]+"</li>");
+						o2.append("<li>"+$("#fmQtd").val()+"</li>");
+						o2.append("<li>"+botoesAcoes+"</li>");
+						// Refresh events
+						$("BUTTON#d"+sNoItens).click(function(e){
+							var o = e.currentTarget; 
+							var oid = o.parentElement.parentElement.id;
+							delItem(oid);
+							});
+						$("BUTTON#r"+sNoItens).click(function(e){
+							var o = e.currentTarget; 
+							var oid = o.parentElement.parentElement.id;
+							recItem(oid);
+							});
+						$("BUTTON#e"+sNoItens).click(function(e){
+							var o = e.currentTarget;
+							var oid = o.parentElement.parentElement.id;
+							edtItem(oid,o);
+							});
+						}
+					noIt++;
+					}
+				}
+				function clearCab(){
+					// Limpa os campos do formulário cabeçalho - VARIÁVEL
+					$(IN_OS).val("");
+					$("INPUT#areaDemand").val("");
+					$("INPUT#DtIniServ").val("");
+					$("TEXTAREA#Descri").val("");
+					// Desabilita botões
+					$("BUTTON#btnCabSave").attr('class', 'disabled');
+					$("BUTTON#btnCabUpd").attr('class', 'disabled');
+					// Limpa itens que não sejam titulo
+					$('UL#main LI.item').remove();
+					}
+				// Devolve o número de itens já utilizados
+				function contaItem(pTpServ){
+					console.log(pTpServ);
+					// ENVIE: http://intranet-se01/dvpi/Curso_jq/CRUD_selePedidoItem.php?TpServ=09
+					return pTpServ;
+					}
+				// Chama a checagem de quantidade
+				function chkQtd(ob){
+					var ind = ob.value;
+					var vTpServ = TIPO_SERV[parseInt(ob.value)][2];
+					console.log(vTpServ);
+					
+					if( vTpServ != "[Escolha o Tipo]" ){
+						var qtd = contaItem(ind);
+						}
+					}
+		</script>
+</head>
+<!--
+	CORPO DA PÁGINA:
+	Função init é um padrão, apontando o fim do carregamento da página, e a garantia
+	de que todos os controles referenciados pelo jQuery acabaram de ser carregados.
+-->
+<body onload="init();">
+	<!-- 
+		Cabeçalho do pedido 
+	-->
+	<div id="pedido">
+		<center>
+			<h1 class="big"><b>P e d i d o</b>
+			<div style="width: 86px;padding: 0px;margin: 0px;display: inline-block;float:right;">
+			<button id="Az" class="pq" onclick="trocaStyleSheet('estilo_azul.css')">&nbsp;</button>
+			<button id="Lj" class="pq" onclick="trocaStyleSheet('estilo_laranja.css')">&nbsp;</button>
+			<button id="Vd" class="pq" onclick="trocaStyleSheet('estilo_verde.css')">&nbsp;</button>
+			<button id="Vm" class="pq" onclick="trocaStyleSheet('estilo_vermelho.css')">&nbsp;</button>
+			<button id="Cz" class="pq" onclick="trocaStyleSheet('estilo_cinza.css')">&nbsp;</button></div>
+			</h1>
+			<table>
+				<tr>
+					<td><label>No. OS:</label></td><td><input id="noOS" name="noOS" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Área Demandante:</label></td><td><input name="areaDemand" id="areaDemand" type="text"></td>
+				</tr>
+				<tr>
+					<td><label>Data Início<br>Serviço:</label></td><td><input name="dtIniServ" id="dtIniServ" type="date"></td>
+				</tr>
+				<tr>
+					<td><label>Descrição:</label></td><td><textarea name="descri" id="descri" cols=40 rows=5></textarea></td>
+				</tr>
+			</table>
+			<button id="btnCabSave" onclick="preSave('CRUD_add.php','Save')">Inclui Pedido</button>
+			<button id="btnCabUpd" onclick="preUpd('CRUD_upd.php','Update')">Atualiza Pedido</button>
+			<button id="btnCabClr" onclick="clearCab()">Limpa os campos</button>
+		</center>
+	</div>
+	<!-- 
+		Itens do pedido 
+	-->
+	<ul id="main">
+
+	</ul>
+	<div id="frm">
+		<h1 align=center>Entrada de Itens<br>do Pedido</h1>
+		<table style="width: 500px;">
+			<tr>
+				<td><label>No. Item:</label></td><td><input id="fmItem" type="text"></td>
+			</tr>
+			<tr>
+				<td><label>Tipo Item:</label></td><td><select id="fmTpItem" type="text" onchange="chkQtd(this);"></select></td>
+			</tr>
+			<tr>
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number">&nbsp;&nbsp;<label>Disponível:</label><input id="fmQtdDisp" type="number"></td>
+			</tr>
+		</table>
+		<center>
+			<button id="addIt" onclick="addReg()">Adiciona Item</button>
+			<button id="grvIt" onclick="gravaItens()">Grava</button>
+			
+		</center>
+	</div>
+	<div id="aviso"></div>
+</body>
+</html>
+

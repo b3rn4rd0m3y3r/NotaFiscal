@@ -1,6 +1,6 @@
 <html>
 <head>
-		<title>jq024</title>
+		<title>jq025</title>
 		<link rel="shortcut icon" href="favicon.ico" />
 		<link rel="stylesheet" href="estilo_vermelho.css" />
 		<link rel="stylesheet" href="estilo.css" />
@@ -41,6 +41,7 @@
 		<script type="text/javascript">
 			var o = null;
 			var noIt = 0;
+			var headerISO = 'application/x-www-form-urlencoded; charset=iso-8859-1';
 			/*
 				FUNÇÕES DE FETCH AO BANCO DE DADOS, VIA PHP
 			*/
@@ -50,6 +51,7 @@
 				console.log("Load Itens.");
 				var myHeaders = new Headers();
 				myHeaders.append('Content-Type','text/plain; charset=utf-8');
+				// Faz a requisição do arquivo texto com os itens
 				fetch(NoOS+'.txt', myHeaders)
 					.then(function (response) {
 						return response.arrayBuffer();
@@ -58,21 +60,28 @@
 						const decoder = new TextDecoder('iso-8859-1');
 						const text = decoder.decode(buffer);
 						console.log(text);
+						// Parte o buffer em linhas de texto
 						var arr = text.split("\r\n");
-						// Formato HTML
+						// Linha 0: Formato HTML ou vazio
 						console.log(arr[0]);
-						// Formato JSON
+						// Linha 1: Formato JSON
 						console.log(arr[1]);
 						var jarr = JSON.parse(arr[1]);
+						// Carrega itens no Form de itens para depois adicioná-los à table de itens
 						for(i=1;i<jarr.length;i++){
 							$("INPUT#fmItem").val( jarr[i].NoItem);
 							$("SELECT#fmTPItem").val((jarr[i].TipodoItem).substr(0,1));
 							$("INPUT#fmQtd").val( jarr[i].Quantidade);
+							// As linhas com classe "inverso" são as marcadas para deleção ou não inclusão
 							if( jarr[i].classe != "inverso" ){
-								addItem(i,jarr[i].Ordem, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
+								//addItem(i,jarr[i].Ordem, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
+								addItem(i,i, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
 								}
 							}
-					})					
+					}).catch(function() {
+						console.log("Arquivo paralelo de registro não existente. Pedido não contém itens.");
+						return;
+						});				
 				}
 			// Procura uma OS cujo número está no parâmetro NoOS
 			function seleOS(txtUrl, tipoSave){
@@ -81,7 +90,7 @@
 				const options = {
 					method: 'post',
 					headers: {
-						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						'Content-type': headerISO
 						}
 					}
 				// Chamada AJAX
@@ -272,7 +281,7 @@
 				const options = {
 					method: 'post',
 					headers: {
-						'Content-type': 'application/x-www-form-urlencoded; charset=iso-8859-1'
+						'Content-type': headerISO
 						}
 					}
 				// Chamada AJAX
@@ -296,9 +305,19 @@
 				}
 			// Adiciona item baseado no form DIV
 			function addReg(){
-				addItem(0,"", "","", "", "");
+				// Checa se o mínimo do cabeçalho foi preenchido
+				if( $("INPUT#noOS").val() == "" ){
+					alert("Número de OS ausente");
+					} else {
+					if( $("INPUT#areaDemand").val() == "" ){
+						alert("Área demandante ausente");
+						} else {
+						addItem(0,"", "","", "", "");
+						}
+					}
 				}
-			// Marca para deleção um dos itens
+			// Marca para deleção um dos itens com
+			// nome de classe "inverso" no UL e LIs
 			function delItem(obj){
 				var o = $("UL#"+obj);
 				o.attr('class', 'inverso');
@@ -306,19 +325,23 @@
 				o.attr('class', 'inverso');
 				}
 			// Desmarca um item que fora marcado para deleção
+			// A classe "inverso" vira "" (vazio)
 			function recItem(obj){
 				var o = $("UL#"+obj+" LI");
 				o.attr('class', '');
 				o = $("UL#"+obj);
 				o.attr('class', '');
 				}
-			// Faz o preparo 
-			function edtItem(obj){
+			// Faz o preparo da edição
+			function edtItem(obj,btn){
+				// Coleção que tem os valores
 				var o = $("UL#"+obj+" LI");
 				// Transfere os valores para o formulário de item
 				$("INPUT#fmItem").val(o[1].innerText);
 				$("SELECT#fmTPItem").val( (o[2].innerText).substr(0,1) );
 				$("INPUT#fmQtd").val(o[3].innerText);
+				//btn
+				o = $("LI#"+obj);
 				o.remove();
 				}
 			// Adiciona um item (coluna de cabeçalho ou registro)
@@ -367,22 +390,24 @@
 						o2.append("<li>"+$("#fmQtd").val()+"</li>");
 						o2.append("<li>"+botoesAcoes+"</li>");
 						// Refresh events
-						$("BUTTON.acoes").click(function(e){
+						$("BUTTON#d"+sNoItens).click(function(e){
 							var o = e.currentTarget; 
 							var oid = o.parentElement.parentElement.id;
-							//o = "it"+o.substr(-3);
-							//delItem(o);
 							delItem(oid);
 							});
-						$("BUTTON.del").click(function(e){
+						$("BUTTON#r"+sNoItens).click(function(e){
 							var o = e.currentTarget; 
 							var oid = o.parentElement.parentElement.id;
 							recItem(oid);
 							});
-						$("BUTTON.edt").click(function(e){
-							var o = e.currentTarget; 
+						$("BUTTON#e"+sNoItens).click(function(e){
+							var o = e.currentTarget;
+							// TODO - Faça o teste passo a passo, para ver se não devolve nulo
+							//var o1 = o.parentElement;
+							//var o2 = o1.parentElement;
+							//var oid = o2.id;
 							var oid = o.parentElement.parentElement.id;
-							edtItem(oid);
+							edtItem(oid,o);
 							});
 						}
 					noIt++;
@@ -397,6 +422,11 @@
 					// Desabilita botões
 					$("BUTTON#btnCabSave").attr('class', 'disabled');
 					$("BUTTON#btnCabUpd").attr('class', 'disabled');
+					// Limpa itens que não sejam titulo
+					
+					//$("LI[id!='it000']").remove();
+					$('UL#main').find('LI[id!="it000"]').find('LI[class!="tit"]').remove();
+					//$('UL#main').find('LI[id!="it000"]').remove();
 					}
 		</script>
 </head>

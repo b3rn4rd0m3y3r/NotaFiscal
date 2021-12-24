@@ -1,6 +1,6 @@
 <html>
 <head>
-		<title>jq024</title>
+		<title>jq023</title>
 		<link rel="shortcut icon" href="favicon.ico" />
 		<link rel="stylesheet" href="estilo_vermelho.css" />
 		<link rel="stylesheet" href="estilo.css" />
@@ -8,11 +8,10 @@
 		<meta name="author" content="Bernardo Meyer">
 		<meta name="description" content="Títulos, parágrafos e SPAN. Estilos de fonte. Introdução do botão de ATUALIZAÇÃO.">
 		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
-		<!-- Chamada: jq024.html -->
+		<!-- Chamada: jq019.html -->
 		<!--
 				***************** Funções *****************
 				
-				loadItens		- Carrega os itens previamente gravados
 				seleOS 			- Checa existência de OS
 				preUpd 			- Constrói a URL de atualização (Cabeçalho)
 				preSave 		- Constrói a URL de registro novo (Cabeçalho)
@@ -44,37 +43,9 @@
 			/*
 				FUNÇÕES DE FETCH AO BANCO DE DADOS, VIA PHP
 			*/
-			// Carrega os itens do pedido a partir de um arquivo txt,
-			// cujo nome é <No. da OS>.txt
 			function loadItens(NoOS){
-				console.log("Load Itens.");
-				var myHeaders = new Headers();
-				myHeaders.append('Content-Type','text/plain; charset=utf-8');
-				fetch(NoOS+'.txt', myHeaders)
-					.then(function (response) {
-						return response.arrayBuffer();
-					})
-					.then(function (buffer) {
-						const decoder = new TextDecoder('iso-8859-1');
-						const text = decoder.decode(buffer);
-						console.log(text);
-						var arr = text.split("\r\n");
-						// Formato HTML
-						console.log(arr[0]);
-						// Formato JSON
-						console.log(arr[1]);
-						var jarr = JSON.parse(arr[1]);
-						for(i=1;i<jarr.length;i++){
-							$("INPUT#fmItem").val( jarr[i].NoItem);
-							$("SELECT#fmTPItem").val((jarr[i].TipodoItem).substr(0,1));
-							$("INPUT#fmQtd").val( jarr[i].Quantidade);
-							if( jarr[i].classe != "inverso" ){
-								addItem(i,jarr[i].Ordem, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
-								}
-							}
-					})					
+				
 				}
-			// Procura uma OS cujo número está no parâmetro NoOS
 			function seleOS(txtUrl, tipoSave){
 				txtUrl += "?NoOs="+$("INPUT#noOS").val();
 				// Opções para fetch
@@ -113,7 +84,7 @@
 				}
 			// Funções de manutenção dos registros
 			// Tipo Save: "save" ou "edit" ou "delete" ou "sele"
-			// Ajusta a URL de atualização de Cabeçalho de OS
+			// Ajusta a URL de atualização de Cabeçalho
 			function preUpd(txtUrl, tipoSave){
 				txtUrl += "?NoOs="+$("INPUT#noOS").val();
 				txtUrl += "&AreaDemand="+$("INPUT#areaDemand").val();
@@ -212,7 +183,6 @@
 					});
 				$("SELECT#fmTpItem").html(html_tpServ());
 				}
-			// Verifica se os três campos do item foram preenchidos
 			function checaCampos(){
 				var Soma = 0;
 				Soma = ( $("INPUT#noOS").val() != '' ) + ( $("INPUT#areaDemand").val() != '' ) + ( $("INPUT#DtIniServ").val() != '' );
@@ -309,8 +279,6 @@
 			function recItem(obj){
 				var o = $("UL#"+obj+" LI");
 				o.attr('class', '');
-				o = $("UL#"+obj);
-				o.attr('class', '');
 				}
 			// Faz o preparo 
 			function edtItem(obj){
@@ -326,33 +294,17 @@
 				o = $("UL#main");
 				var sNoItens = ("000"+(num+noIt).toString()).substr(-3);
 				var botoesAcoes = "";
-				//botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
-				//botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
-				//botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
-				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 && a5 != "LOAD" ){
+				botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
+				botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
+				botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
+				if( ( $("#fmItem").val() == "" || $("#fmTpItem").val() == "" || $("#fmQtd").val() == "" )  && noIt > 0 ){
 					alert("Preencha o Número do Item, o Tipo e a Quantidade");
 					} else {
-					// Procurar o último item
-					var noelem = o[0].childElementCount;
-					if( noelem != 0 ){
-						var ultId = o[0].children[noelem-1].id;
-						var ultno = ultId.substr(2,3);
-						ultno = parseInt(ultno);
-						//sNoItens = ("000"+(ultno).toString()).substr(-3); // Repetições sem fim
-						sNoItens = ("000"+(ultno+1).toString()).substr(-3);
-						
-						} else {
-						sNoItens = "000";
-						}
 					o.append("<li id=\"it"+sNoItens+"\"></li>");
 					var o1 = $("LI#it"+sNoItens);
 					o1.append("<ul id=\"it"+sNoItens+"\"></ul>");
 					var o2 = $("UL#it"+sNoItens);
 					//o2.append("<li>"+(num+noIt)+"</li>");
-					// Botões de ação
-					botoesAcoes += "<button id=d" + sNoItens + " class=acoes>D</button>"; // Marca para deleção
-					botoesAcoes += "<button  id=r" + sNoItens + " class=del>R</button>"; // Desfaz deleção
-					botoesAcoes += "<button  id=e" + sNoItens + " class=edt>E</button>"; // Faz edição
 					// Testa se é título
 					if( noIt == 0 ){
 						o2.append("<li class=tit>Ordem</li>");
@@ -368,21 +320,19 @@
 						o2.append("<li>"+botoesAcoes+"</li>");
 						// Refresh events
 						$("BUTTON.acoes").click(function(e){
-							var o = e.currentTarget; 
-							var oid = o.parentElement.parentElement.id;
-							//o = "it"+o.substr(-3);
-							//delItem(o);
-							delItem(oid);
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							delItem(o);
 							});
 						$("BUTTON.del").click(function(e){
-							var o = e.currentTarget; 
-							var oid = o.parentElement.parentElement.id;
-							recItem(oid);
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							recItem(o);
 							});
 						$("BUTTON.edt").click(function(e){
-							var o = e.currentTarget; 
-							var oid = o.parentElement.parentElement.id;
-							edtItem(oid);
+							var o = e.currentTarget.id;
+							o = "it"+o.substr(-3);
+							edtItem(o);
 							});
 						}
 					noIt++;

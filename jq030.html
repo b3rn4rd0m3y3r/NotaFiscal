@@ -1,12 +1,12 @@
 <html>
 <head>
-		<title>jq029</title>
+		<title>jq030</title>
 		<link rel="shortcut icon" href="favicon.ico" />
 		<link id="pgestilo" rel="stylesheet" href="estilo_laranja.css" />
 		<link rel="stylesheet" href="estilo.css" />
 		<meta charset="iso-8859-1"/>
 		<meta name="author" content="Bernardo Meyer">
-		<meta name="description" content="Ajustes no comportamento dos controles para evidenciar as ações possíveis e não possíveis.">
+		<meta name="description" content="Ajustes no comportamento dos controles para evidenciar as ações possíveis e não possíveis. Recalcular quantidades na edição.">
 		<meta name="keywords" content="sites, web, desenvolvimento, HTML5">
 		<!-- Chamada: jq027.html -->
 		<!-- TODO: checar quantidade (Ex: select sum(Quantidade) from PedidoItens where TpItem Like '1-Clientes resid%') -->
@@ -45,7 +45,7 @@
 		<style>
 			BUTTON.pq {height: 10px;width: 12px;font-size: 12px;padding: 0px;margin-right: 0px; margin-left: 0px;left: 1px;float:left;}
 			BUTTON#Az {background-color: dodgerblue;}
-			BUTTON#Cz {background-color: gold;}
+			BUTTON#Lj {background-color: gold;}
 			BUTTON#Vd {background-color: MediumSeaGreen;}
 			BUTTON#Vm {background-color: red;}
 			BUTTON#Cz {background-color: gray;}
@@ -82,7 +82,7 @@
 					o.css('width','74px');
 					o.css('font-size','22px');
 					// Só limpa os itens se tudo estiver preenchido para gravação
-					clearFmItem();
+					//clearFmItem();
 					}
 				}
 			// Volta botão ao estado normal
@@ -141,6 +141,8 @@
 								addItem(i,i, jarr[i].NoItem, jarr[i].TipodoItem, jarr[i].Quantidade, "LOAD");
 								}
 							}
+						// Limpa o formulário de Itens
+						clearFmItem();
 					}).catch(function() {
 						console.log("loadItens: " + NoOS + "Arquivo paralelo de registro não existente. Pedido não contém itens.");
 						return;
@@ -364,7 +366,7 @@
 						mostrAviso("Gravando itens ...");
 						return response.text();
 						})
-					.then(function(){ console.log; dmkBtGrava(); })
+					.then(function(){ console.log; dmkBtGrava(); clearFmItem();})
 					.catch( (error) => {
 						mostrAviso("Erro gravando itens ...");
 						console.error('gravaItens: ', error);
@@ -411,9 +413,14 @@
 				$("INPUT#fmItem").val(o[1].innerText);
 				$("SELECT#fmTPItem").val( (o[2].innerText).substr(0,2) ); // MUDOU de 1 para 2
 				$("INPUT#fmQtd").val(o[3].innerText);
+				// Traz as informações da tabela de Tipos de Serviços
+				var ind = (o[2].innerText).substr(0,2) ;
+				contaItem(ind);
 				//btn
 				o = $("LI#"+obj);
 				o.remove();
+				// Maximiza o botão de Gravar
+				mkBtGrava();
 				}
 			// Adiciona um item (coluna de cabeçalho ou registro)
 			function addItem(num, a1, a2, a3, a4, a5){
@@ -614,10 +621,10 @@
 				<td><label>Tipo Item:</label></td><td><select id="fmTpItem" type="text" onchange="chkQtd(this);"></select></td>
 			</tr>
 			<tr>
-				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number" style="width: 50px;">
-				&nbsp;&nbsp;<label>Já utilizada:</label><input id="fmQtdGasta" type="number" style="width: 50px;">
-				&nbsp;&nbsp;<label>Total:</label><input id="fmQtdTotal" type="number" style="width: 50px;">
-				&nbsp;&nbsp;<label>Disponível:</label><input id="fmQtdDisp" type="number" style="width: 50px;">
+				<td><label>Quantidade:</label></td><td><input id="fmQtd" type="number" style="width: 60px;">
+				&nbsp;&nbsp;<label>Já utilizada:</label><input id="fmQtdGasta" type="number" style="width: 60px;">
+				&nbsp;&nbsp;<label>Total:</label><input id="fmQtdTotal" type="number" style="width: 60px;">
+				&nbsp;&nbsp;<label>Disponível:</label><input id="fmQtdDisp" type="number" style="width: 60px;">
 				</td>
 			</tr>
 		</table>

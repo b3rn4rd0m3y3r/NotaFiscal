@@ -1,6 +1,10 @@
+			BODY {
+				font-size: 14px;
+				}
 			BUTTON {
 				background-color: var(--fndbt);
 				color: white;
+				font-weight: bold;
 				margin: 4px;
 				}
 			BUTTON.disabled{
@@ -15,6 +19,22 @@
 			BUTTON.acoes {margin:0px; font-size: 10px;background-color: var(--btitens)}
 			BUTTON.del {margin:0px; font-size: 10px;font-weight: bold;background-color: lightgrey ;color:var(--btitens);}
 			BUTTON.edt {margin:0px; font-size: 10px;background-color: var(--btitens)}
+			DIV#aviso {
+				background: pink;
+				border: solid 1px #FF0077; 
+				color: maroon;
+				display: none;
+				font-family: var(--ftpad);
+				font-size: 24px;
+				font-weight: bold;
+				left: -800px;
+				padding-bottom: 10px;
+				padding-top: 10px;
+				position: absolute;
+				text-align: center;
+				top: 100px;
+				width: 300px;
+				}
 			DIV#frm {
 				border: solid 1px var(--claro);
 				border-radius: 12px;

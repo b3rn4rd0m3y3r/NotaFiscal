@@ -10,7 +10,7 @@
 	$params = array(
 		urldecode($TpServ) . "%"
 		);
-	echo urldecode($TpServ);
+	//echo urldecode($TpServ); // Não pode haver outros echoes que não o de resposta efetiva
 	$sth = $conn->prepare($sql);
 	$sth->execute($params);
 	$Soma = 0;

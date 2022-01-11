@@ -274,7 +274,7 @@
 				$(IN_OS).focusout(function() {
 					if( checaCampos() == 3 && $(BT_CabUpd).attr('class') == "disabled" ){ $(BT_CabSave).attr('class', ''); }
 					seleOS("CRUD_seleNoOS.php", "Sele");
-					$("SELECT#fmTpItem").val("01");
+					$("SELECT#fmTpItem").val("00");
 					});
 				$("INPUT#areaDemand").focusout(function() {
 					if( checaCampos() == 3  && $(BT_CabUpd).attr('class') == "disabled" ){ $(BT_CabSave).attr('class', ''); }
@@ -461,7 +461,7 @@
 						} else {
 						o2.append("<li>"+(num+noIt)+"</li>");
 						o2.append("<li>"+$("#fmItem").val()+"</li>");
-						o2.append("<li>"+$("#fmTpItem").val()+"-"+TIPO_SERV[parseInt($("#fmTpItem").val())][2]+"</li>");
+						o2.append("<li>"+(parseInt($("#fmTpItem").val())+1)+"-"+TIPO_SERV[parseInt($("#fmTpItem").val())+1][2]+"</li>");
 						o2.append("<li>"+$("#fmQtd").val()+"</li>");
 						o2.append("<li>"+botoesAcoes+"</li>");
 						// Refresh events
@@ -487,7 +487,7 @@
 				// Limpa campos do formulário de itens
 				function clearFmItem(){
 					$("INPUT#fmItem").val("");
-					$("SELECT#fmTpItem").val("01");
+					$("SELECT#fmTpItem").val("00");
 					$("INPUT#fmQtd").val("");
 					$("INPUT#fmQtdGasta").val("");
 					$("INPUT#fmQtdTotal").val("");
@@ -546,8 +546,8 @@
 					}
 				// Chama a checagem de quantidade
 				function chkQtd(ob){
-					var ind = ob.value;
-					var vTpServ = TIPO_SERV[parseInt(ob.value)][2];
+					var ind = parseInt(ob.value)+1;
+					var vTpServ = TIPO_SERV[ind][2];
 					console.log(vTpServ);
 					
 					if( vTpServ != "[Escolha o Tipo]" ){

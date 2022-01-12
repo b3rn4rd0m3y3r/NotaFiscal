@@ -106,8 +106,12 @@
 				var myHeaders = new Headers();
 				myHeaders.append('Content-Type',headerUTFtxt);
 				myHeaders.append('signal',signal);
+				var urlTxt = NoOS+'.txt';
+// testa existência
+$.get(urlTxt)
+    .done(function() { 
 				// Faz a requisição do arquivo texto com os itens
-				fetch(NoOS+'.txt', myHeaders)
+				fetch(urlTxt, myHeaders)
 					.then(function (response) {
 						if (!response.ok) { 
 							mostrAviso("Pedido sem itens.");
@@ -146,7 +150,11 @@
 					}).catch(function() {
 						console.log("loadItens: " + NoOS + "Arquivo paralelo de registro não existente. Pedido não contém itens.");
 						return;
-						});				
+						});
+//
+    }).fail(function() { 
+        mostrAviso("Pedido NOVO");
+    })
 				}
 			// Procura uma OS cujo número está no parâmetro NoOS
 			function seleOS(txtUrl, tipoSave){
@@ -468,7 +476,8 @@
 						} else {
 						o2.append("<li>"+(num+noIt)+"</li>");
 						o2.append("<li>"+$("#fmItem").val()+"</li>");
-						o2.append("<li>"+$("#fmTpItem").val()+"-"+TIPO_SERV[parseInt($("#fmTpItem").val())][2]+"</li>");
+						// Como entrou mais uma linha "Digitar a sua escolha", é preciso somar 1 ao índice
+						o2.append("<li>"+($("#fmTpItem").val())+"-"+TIPO_SERV[parseInt($("#fmTpItem").val())][2]+"</li>");
 						o2.append("<li>"+$("#fmQtd").val()+"</li>");
 						o2.append("<li>"+botoesAcoes+"</li>");
 						// Refresh events
